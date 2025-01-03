@@ -1,4 +1,4 @@
--- Decompiled with the Synapse X Luau decompiler.
+
 
 local u1 = {
 	Font = {
