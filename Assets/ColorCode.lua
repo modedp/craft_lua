@@ -1,0 +1,18 @@
+return {	
+	["0"] = { Color3.new(0, 0, 0), Color3.new(0, 0, 0) }, 
+	["1"] = { Color3.fromRGB(0, 0, 170), Color3.fromRGB(0, 0, 42) }, 
+	["2"] = { Color3.fromRGB(0, 170, 0), Color3.fromRGB(0, 42, 0) }, 
+	["3"] = { Color3.fromRGB(0, 170, 170), Color3.fromRGB(0, 42, 42) }, 
+	["4"] = { Color3.fromRGB(170, 0, 0), Color3.fromRGB(42, 0, 0) }, 
+	["5"] = { Color3.fromRGB(170, 0, 170), Color3.fromRGB(42, 0, 42) }, 
+	["6"] = { Color3.fromRGB(170, 170, 0), Color3.fromRGB(42, 42, 0) }, 
+	["7"] = { Color3.fromRGB(170, 170, 170), Color3.fromRGB(42, 42, 42) }, 
+	["8"] = { Color3.fromRGB(85, 85, 85), Color3.fromRGB(21, 21, 21) }, 
+	["9"] = { Color3.fromRGB(85, 85, 255), Color3.fromRGB(21, 21, 63) }, 
+	a = { Color3.fromRGB(85, 255, 85), Color3.fromRGB(21, 63, 21) }, 
+	b = { Color3.fromRGB(85, 255, 255), Color3.fromRGB(21, 63, 63) }, 
+	c = { Color3.fromRGB(255, 85, 85), Color3.fromRGB(63, 21, 21) }, 
+	d = { Color3.fromRGB(255, 85, 255), Color3.fromRGB(63, 16, 63) }, 
+	e = { Color3.fromRGB(255, 255, 85), Color3.fromRGB(63, 63, 21) }, 
+	f = { Color3.fromRGB(255, 255, 255), Color3.fromRGB(63, 63, 63) }, 
+}
