@@ -1,3 +1,4 @@
+--[[Parent of this script is StarterPlayerScripts]]
 local l__ReplicatedStorage__1 = game:GetService("ReplicatedStorage");
 local l__PlayerScripts__2 = game:GetService("Players").LocalPlayer.PlayerScripts;
 local v3 = require(l__ReplicatedStorage__1.Libs.SyncEvent);
