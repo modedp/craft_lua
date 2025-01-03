@@ -1,42 +1,41 @@
-return function(p1)
-	local v1 = nil;
-	local v2 = {};
-	if p1 then
-		setmetatable(v2, {
-			__index = p1
-		});
-	end;
-	local v3 = {
-		__index = v2
-	};
-	v1 = {};
-	function v2.constructor(p2)
+return function(parent)
+    local class = {}
+    local instanceMarker = {}
 
-	end;
-	if p1 then
-		function v2.new(...)
-			local v4 = setmetatable(p1.new(...), v3);
-			v4[v1] = true;
-			v4:constructor(...);
-			return v4;
-		end;
-	else
-		function v2.new(...)
-			local v5 = setmetatable({}, v3);
-			v5[v1] = true;
-			v5:constructor(...);
-			return v5;
-		end;
-	end;
-	function v2.objectIsSelf(p3)
-		local v6 = false;
-		if type(p3) == "table" then
-			v6 = p3[v1];
-		end;
-		return v6;
-	end;
-	function v2.isA(p4, p5)
-		return p5 and p5.objectIsSelf(p4);
-	end;
-	return v2;
-end;
+    -- Inherit from parent if provided
+    if parent then
+        setmetatable(class, { __index = parent })
+    end
+
+    -- Metatable for instances
+    local instanceMetatable = { __index = class }
+
+    -- Placeholder constructor
+    function class.constructor(instance, ...)
+    end
+
+    -- Create a new instance
+    function class.new(...)
+        local instance
+        if parent then
+            instance = setmetatable(parent.new(...), instanceMetatable)
+        else
+            instance = setmetatable({}, instanceMetatable)
+        end
+        instance[instanceMarker] = true
+        instance:constructor(...)
+        return instance
+    end
+
+    -- Check if an object is an instance of this class
+    function class.objectIsSelf(object)
+        return type(object) == "table" and object[instanceMarker] or false
+    end
+
+    -- Check if an object is an instance of a given class
+    function class.isA(object, classType)
+        return classType and classType.objectIsSelf(object)
+    end
+
+    return class
+end

@@ -74,7 +74,7 @@ local l_Replicated_l = game:GetService("ReplicatedStorage")
 local l_Class_l = require(l_Replicated_l.Libs.Class)
 local l_Arrays_l = require(l_Replicated_l.Libs.Arrays)
 local l_Block_l = require(l_Replicated_l.Block)
-u1 = l_Class_l()
+WorldProto = l_Class_l()
 --[[
 ; proto name: constructor
 ; linedefined: 19
@@ -109,7 +109,7 @@ u1 = l_Class_l()
 [031]   SETTABLEKS  3  0 157 ; K(Code[PC + 1]): entities
 [033]   RETURN  0  1  0 ; 0 returns
 ]]
-function u1.constructor(p1,seed,size)
+function WorldProto.constructor(p1,seed,size)
 	p1.seed = seed
 	p1.size = size
 	p1.height = 64
@@ -152,7 +152,7 @@ end
 [024]   CALL  6  2  1
 [025]   RETURN  5  2  0 ; 1 returns
 ]]
-function u1.spawnLocalEntity(p5, p6, p7, p8, p9, ...)
+function WorldProto.spawnLocalEntity(p5, p6, p7, p8, p9, ...)
 	local v16 = p6.new(p5, p7, p8, p9, ...);
 	v16.isRemote = false;
 	p5.entities[#p5.entities + 1] = v16;
@@ -197,7 +197,7 @@ end;
 [034]   SETTABLE  4  6  2
 [035]   RETURN  0  1  0 ; 0 returns
 ]]
-function u1.setBlock(p1,x,y,z,id)
+function WorldProto.setBlock(p1,x,y,z,id)
 	if x >= 1 and y >= 1 and z >= 1 and x <= p1.size and y <= p1.height and z <= p1.size then
 		local block = p1.blocks[x][y][z]
         if block == id then return end 
@@ -235,7 +235,7 @@ end
 [022]   CALL  6  7  1
 [023]   RETURN  0  1  0 ; 0 returns
 ]]
-function u1.setBlockIfAir(p1,x,y,z,id,updatenear)
+function WorldProto.setBlockIfAir(p1,x,y,z,id,updatenear)
 	local Block = p1.getBlock(p1,x,y,z)
 	if Block ~= l_Block_l.air.blockID then
         return
@@ -296,7 +296,7 @@ end
 [063]   GETTABLE  4  5  2
 [064]   RETURN  4  2  0 ; 1 returns
 ]]
-function u1.getBlock(p1,x,y,z)
+function WorldProto.getBlock(p1,x,y,z)
 	if x >= 1 and y >= 1 and z >= 1 and x <= p1.size and y <= p1.height and z <= p1.size then
         return p1.blocks[x][y][z]
     elseif y < 1 then
@@ -388,7 +388,7 @@ end
 [101]   CALL  7  2  0
 [102]   RETURN  7  0  0 ; variadic return
 ]]
-function u1.canPlaceBlockAt(p1,x,y,z,id)
+function WorldProto.canPlaceBlockAt(p1,x,y,z,id)
 	if x >= 1 and y >= 1 and z >= 1 and x <= p1.size and y <= p1.height and z <= p1.size then
         local block = p1.getBlock(p1, x, y, z)
         if block == l_Block_l.slab.blockID and id == l_Block_l.slab.blockID then
@@ -460,7 +460,7 @@ end
 [044]   LOADB  4  1  0
 [045]   RETURN  4  2  0 ; 1 returns
 ]]
-function u1.canBlockSeeSky(p1,x,y,z)
+function WorldProto.canBlockSeeSky(p1,x,y,z)
 	if x >= 1 and y >= 1 and z >= 1 and x <= p1.size and y <= p1.height and z <= p1.size then
         for i = y + 1, p1.height do
             local block = p1.getBlock(p1, x, i, z)
@@ -558,7 +558,7 @@ end
 [092]   FORNLOOP 10 -48 ; jump to 44
 [093]   RETURN  3  2  0 ; 1 returns
 ]]
-function u1.getCollidingAABBs(p1,entityCollision,position)
+function WorldProto.getCollidingAABBs(p1,entityCollision,position)
 	local collidingAABBs = {}
 
     local minX = math.floor(entityCollision.minX)
@@ -658,7 +658,7 @@ end
 [078]   LOADB  9  0  0
 [079]   RETURN  9  2  0 ; 1 returns
 ]]
-function u1.isWaterInAABB(p1,entityCollision)
+function WorldProto.isWaterInAABB(p1,entityCollision)
 	local minX = math.floor(entityCollision.minX)
     local maxX = math.floor(entityCollision.maxX + 1)
     local minY = math.floor(entityCollision.minY)
@@ -748,7 +748,7 @@ end
 [075]   LOADB  9  0  0
 [076]   RETURN  9  2  0 ; 1 returns
 ]]
-function u1.isLavaInAABB(p1,entityCollision)
+function WorldProto.isLavaInAABB(p1,entityCollision)
 	local minX = math.floor(entityCollision.minX)
     local maxX = math.ceil(entityCollision.maxX)
     local minY = math.floor(entityCollision.minY)
@@ -797,7 +797,7 @@ end
 [018]   LOADB  3  1  0
 [019]   RETURN  3  2  0 ; 1 returns
 ]]
-function u1.isAABBFree(p1,Box)
+function WorldProto.isAABBFree(p1,Box)
 	local existing = Box.getEntitiesInAABB(p1, Box)
     for _, x1 in pairs(existing) do
         if not x1.dead and x1.preventEntitySpawning then
@@ -834,7 +834,7 @@ end
 [019]   FORGLOOP_NEXT  3 -12 ; jump to 7
 [020]   RETURN  2  2  0 ; 1 returns
 ]]
-function u1.getEntitiesInAABB(p1,collisionBox)
+function WorldProto.getEntitiesInAABB(p1,collisionBox)
 	local ents = {}
 	for _,e1 in pairs(p1.entities) do
 		local box = e1.getCollisionBox(e1)
@@ -865,7 +865,7 @@ end
 [011]   FORGLOOP_NEXT  2 -6 ; jump to 5
 [012]   RETURN  0  1  0 ; 0 returns
 ]]
-function u1.getEntityByUUID(p1,uuid)
+function WorldProto.getEntityByUUID(p1,uuid)
 	for _,u1 in pairs(p1.entities) do
 		if u1.uuid == uuid then
 			return u1
@@ -902,7 +902,7 @@ end
 [021]   FORGLOOP_NEXT  7 -13 ; jump to 8
 [022]   RETURN  5  2  0 ; 1 returns
 ]]
-function u1.getClosestPlayerTo()
+function WorldProto.getClosestPlayerTo()
 	local closestPlayer = nil
     local minDistance = math.huge
 
@@ -916,7 +916,7 @@ function u1.getClosestPlayerTo()
 
     return closestPlayer
 end
-function u1.playSoundAtPosition(p1,p2,p3,p4,p5,p6,p7)
+function WorldProto.playSoundAtPosition(p1,p2,p3,p4,p5,p6,p7)
 	warn("This must be implemented by the client or server world!")
 	return 
 end
@@ -941,9 +941,9 @@ end
 [011]   CALL  5  8  0
 [012]   RETURN  5  0  0 ; variadic return
 ]]
-function u1.playSoundAtEntity(p1,entity,SName,var1,var2)
+function WorldProto.playSoundAtEntity(p1,entity,SName,var1,var2)
 	local x,y,z = entity.x,entity.y,entity.z
 	return p1.playSoundAtPosition(p1,x,y,z,SName,var1,var2)
 end
 
-return u1
+return WorldProto
