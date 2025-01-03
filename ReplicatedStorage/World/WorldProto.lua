@@ -390,8 +390,29 @@ end
 ]]
 function u1.canPlaceBlockAt(p1,x,y,z,id)
 	if x >= 1 and y >= 1 and z >= 1 and x <= p1.size and y <= p1.height and z <= p1.size then
+        local block = p1.getBlock(p1, x, y, z)
+        if block == l_Block_l.slab.blockID and id == l_Block_l.slab.blockID then
+            return l_Block_l.doubleSlab:isCollidable()
+        end
 
-	end
+        if block ~= l_Block_l.air.blockID then
+            local collisionBoxes = block:getCollisionBoxes()
+            if collisionBoxes then
+                for _, box in ipairs(collisionBoxes) do
+                    if not p1:isAABBFree(box:Translate(x, y, z)) then
+                        return false
+                    end
+                end
+            end
+        end
+
+        if block == l_Block_l.slab.blockID and id == l_Block_l.slab.blockID then
+            return true
+        end
+
+        return block:isReplaceable()
+    end
+    return false
 end
 --[[
 ; proto name: canBlockSeeSky
@@ -441,8 +462,15 @@ end
 ]]
 function u1.canBlockSeeSky(p1,x,y,z)
 	if x >= 1 and y >= 1 and z >= 1 and x <= p1.size and y <= p1.height and z <= p1.size then
-
-	end
+        for i = y + 1, p1.height do
+            local block = p1.getBlock(p1, x, i, z)
+            if block:isSunlightBlocking() then
+                return false
+            end
+        end
+        return true
+    end
+    return false
 end
 --[[
 ; proto name: getCollidingAABBs
@@ -531,7 +559,32 @@ end
 [093]   RETURN  3  2  0 ; 1 returns
 ]]
 function u1.getCollidingAABBs(p1,entityCollision,position)
+	local collidingAABBs = {}
 
+    local minX = math.floor(entityCollision.minX)
+    local maxX = math.floor(entityCollision.maxX + 1)
+    local minY = math.floor(entityCollision.minY)
+    local maxY = math.floor(entityCollision.maxY + 1)
+    local minZ = math.floor(entityCollision.minZ)
+    local maxZ = math.floor(entityCollision.maxZ + 1)
+
+    for x = minX, maxX - 1 do
+        for y = minY, maxY - 1 do
+            for z = minZ, maxZ - 1 do
+                local block = p1.getBlock(p1, x, y, z)
+                if block:isCollidable() then
+                    local collisionBoxes = block:getCollisionBoxes()
+                    for _, box in ipairs(collisionBoxes) do
+                        if box:Translate(x, y, z):Intersects(entityCollision) then
+                            table.insert(collidingAABBs, box)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return collidingAABBs
 end
 --[[
 ; proto name: isWaterInAABB
@@ -606,7 +659,25 @@ end
 [079]   RETURN  9  2  0 ; 1 returns
 ]]
 function u1.isWaterInAABB(p1,entityCollision)
+	local minX = math.floor(entityCollision.minX)
+    local maxX = math.floor(entityCollision.maxX + 1)
+    local minY = math.floor(entityCollision.minY)
+    local maxY = math.floor(entityCollision.maxY + 1)
+    local minZ = math.floor(entityCollision.minZ)
+    local maxZ = math.floor(entityCollision.maxZ + 1)
 
+    for x = minX, maxX - 1 do
+        for y = minY, maxY - 1 do
+            for z = minZ, maxZ - 1 do
+                local block = p1.getBlock(p1, x, y, z)
+                if block == l_Block_l.water.blockID or block == l_Block_l.waterMoving.blockID then
+                    return true
+                end
+            end
+        end
+    end
+
+    return false
 end
 --[[
 ; proto name: isLavaInAABB
@@ -678,7 +749,25 @@ end
 [076]   RETURN  9  2  0 ; 1 returns
 ]]
 function u1.isLavaInAABB(p1,entityCollision)
+	local minX = math.floor(entityCollision.minX)
+    local maxX = math.ceil(entityCollision.maxX)
+    local minY = math.floor(entityCollision.minY)
+    local maxY = math.ceil(entityCollision.maxY)
+    local minZ = math.floor(entityCollision.minZ)
+    local maxZ = math.ceil(entityCollision.maxZ)
 
+    for x = minX, maxX - 1 do
+        for y = minY, maxY - 1 do
+            for z = minZ, maxZ - 1 do
+                local block = p1.getBlock(p1, x, y, z)
+                if block == l_Block_l.lava.blockID or block == l_Block_l.lavaMoving.blockID then
+                    return true
+                end
+            end
+        end
+    end
+
+    return false
 end
 --[[
 ; proto name: isAABBFree
@@ -709,13 +798,13 @@ end
 [019]   RETURN  3  2  0 ; 1 returns
 ]]
 function u1.isAABBFree(p1,Box)
-	local existing = Box.getEntitiesInAABB(p1,Box)
-	for _,x1 in pairs(existing) do
-		if x1.dead and x1.preventEntitySpawning then
-			return false
-		end
-	end
-	return true
+	local existing = Box.getEntitiesInAABB(p1, Box)
+    for _, x1 in pairs(existing) do
+        if not x1.dead and x1.preventEntitySpawning then
+            return false
+        end
+    end
+    return true
 end
 --[[
 ; proto name: getEntitiesInAABB
@@ -814,7 +903,18 @@ end
 [022]   RETURN  5  2  0 ; 1 returns
 ]]
 function u1.getClosestPlayerTo()
+	local closestPlayer = nil
+    local minDistance = math.huge
 
+    for _, player in pairs(p1.playerEntities) do
+        local distance = player:getDistanceTo(x, y, z)
+        if distance <= maxDistance and distance < minDistance then
+            closestPlayer = player
+            minDistance = distance
+        end
+    end
+
+    return closestPlayer
 end
 function u1.playSoundAtPosition(p1,p2,p3,p4,p5,p6,p7)
 	warn("This must be implemented by the client or server world!")
