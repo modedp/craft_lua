@@ -1,246 +1,456 @@
-local v1 = {};
-v1.__index = v1;
-v1.pooledAABBs = {};
-function v1.new(p1, p2, p3, p4, p5, p6)
-	if p4 < p1 then
-		p1 = p4;
-		p4 = p1;
-	end;
-	if p5 < p2 then
-		p2 = p5;
-		p5 = p2;
-	end;
-	if p6 < p3 then
-		p3 = p6;
-		p6 = p3;
-	end;
-	local v2 = setmetatable({}, v1);
-	v2.minX = p1;
-	v2.minY = p2;
-	v2.minZ = p3;
-	v2.maxX = p4;
-	v2.maxY = p5;
-	v2.maxZ = p6;
-	v2.pooled = false;
-	return v2;
-end;
-local function u1(p7, p8, p9, p10, p11, p12)
-	return ("%.4f/%.4f/%.4f/%.4f/%.4f/%.4f"):format(p7, p8, p9, p10, p11, p12);
-end;
-function v1.fromPool(p13, p14, p15, p16, p17, p18)
-	local v3 = u1(p13, p14, p15, p16, p17, p18);
-	local v4 = v1.pooledAABBs[v3];
-	if v4 then
-		return v4;
-	end;
-	local v5 = v1.new(p13, p14, p15, p16, p17, p18);
-	v5.pooled = true;
-	v1.pooledAABBs[v3] = v5;
-	return v5;
-end;
-function v1.IsEmpty(p19)
-	local v6 = true;
-	if p19.minX ~= p19.maxX then
-		v6 = true;
-		if p19.minY ~= p19.maxY then
-			v6 = p19.minZ == p19.maxZ;
-		end;
-	end;
-	return v6;
-end;
-function v1.Translate(p20, p21, p22, p23)
-	if p20.pooled then
-		return v1.fromPool(p20.minX + p21, p20.minY + p22, p20.minZ + p23, p20.maxX + p21, p20.maxY + p22, p20.maxZ + p23);
-	end;
-	return v1.new(p20.minX + p21, p20.minY + p22, p20.minZ + p23, p20.maxX + p21, p20.maxY + p22, p20.maxZ + p23);
-end;
-function v1.Offset(p24, p25, p26, p27)
-	if p24.pooled then
-		warn("AABB.Offset: trying to mutate a pooled bounding box - ignoring!");
-		return;
-	end;
-	p24.minX = p24.minX + p25;
-	p24.maxX = p24.maxX + p25;
-	p24.minY = p24.minY + p26;
-	p24.maxY = p24.maxY + p26;
-	p24.minZ = p24.minZ + p27;
-	p24.maxZ = p24.maxZ + p27;
-	return p24;
-end;
-function v1.DirectionalExpand(p28, p29)
-	local v7 = p28.minX;
-	local v8 = p28.maxX;
-	local v9 = p28.minY;
-	local v10 = p28.maxY;
-	local v11 = p28.minZ;
-	local v12 = p28.maxZ;
-	if p29.X < 0 then
-		v7 = v7 + p29.X;
-	elseif p29.X > 0 then
-		v8 = v8 + p29.X;
-	end;
-	if p29.Y < 0 then
-		v9 = v9 + p29.Y;
-	elseif p29.Y > 0 then
-		v10 = v10 + p29.Y;
-	end;
-	if p29.Z < 0 then
-		v11 = v11 + p29.Z;
-	elseif p29.Z > 0 then
-		v12 = v12 + p29.Z;
-	end;
-	if p28.pooled then
-		return v1.fromPool(v7, v9, v11, v8, v10, v12);
-	end;
-	return v1.new(v7, v9, v11, v8, v10, v12);
-end;
-function v1.Scale(p30, p31, p32, p33)
-	if p30.pooled then
-		return v1.fromPool(p30.minX * p31, p30.minY * p32, p30.minZ * p33, p30.maxX * p31, p30.maxY * p32, p30.maxZ * p33);
-	end;
-	return v1.new(p30.minX * p31, p30.minY * p32, p30.minZ * p33, p30.maxX * p31, p30.maxY * p32, p30.maxZ * p33);
-end;
-function v1.UniformScale(p34, p35)
-	return p34:Scale(p35, p35, p35);
-end;
-function v1.Intersection(p36, p37)
-	if p36.pooled then
-		return v1.fromPool(math.max(p36.minX, p37.minX), math.max(p36.minY, p37.minY), math.max(p36.minZ, p37.minZ), math.min(p36.maxX, p37.maxX), math.min(p36.maxY, p37.maxY), math.min(p36.maxZ, p37.maxZ));
-	end;
-	return v1.new(math.max(p36.minX, p37.minX), math.max(p36.minY, p37.minY), math.max(p36.minZ, p37.minZ), math.min(p36.maxX, p37.maxX), math.min(p36.maxY, p37.maxY), math.min(p36.maxZ, p37.maxZ));
-end;
-function v1.Extents(p38, p39)
-	if p38.pooled then
-		return v1.fromPool(math.min(p38.minX, p39.minX), math.min(p38.minY, p39.minY), math.min(p38.minZ, p39.minZ), math.max(p38.maxX, p39.maxX), math.max(p38.maxY, p39.maxY), math.max(p38.maxZ, p39.maxZ));
-	end;
-	return v1.new(math.min(p38.minX, p39.minX), math.min(p38.minY, p39.minY), math.min(p38.minZ, p39.minZ), math.max(p38.maxX, p39.maxX), math.max(p38.maxY, p39.maxY), math.max(p38.maxZ, p39.maxZ));
-end;
-function v1.IntersectsPoint(p40, p41)
-	local v13 = false;
-	if p40.minX < p41.x then
-		v13 = false;
-		if p41.x < p40.maxX then
-			v13 = false;
-			if p40.minY < p41.y then
-				v13 = false;
-				if p41.y < p40.maxY then
-					v13 = false;
-					if p40.minZ < p41.z then
-						v13 = p41.z < p40.maxZ;
-					end;
-				end;
-			end;
-		end;
-	end;
-	return v13;
-end;
-function v1.IntersectsRay(p42, p43, p44)
-	if p42:IntersectsPoint(p43) then
-		return true, p43;
-	end;
-	p44 = p44.Unit;
-	local v14 = 1 / p44;
-	local v15 = (p42.minX - p43.x) * v14.x;
-	local v16 = (p42.maxX - p43.x) * v14.x;
-	local v17 = (p42.minY - p43.y) * v14.y;
-	local v18 = (p42.maxY - p43.y) * v14.y;
-	local v19 = (p42.minZ - p43.z) * v14.z;
-	local v20 = (p42.maxZ - p43.z) * v14.z;
-	local v21 = math.max(math.min(v15, v16), math.min(v17, v18), math.min(v19, v20));
-	local v22 = math.min(math.max(v15, v16), math.max(v17, v18), math.max(v19, v20));
-	if v22 < 0 then
-		return false;
-	end;
-	if v22 < v21 then
-		return false;
-	end;
-	local v23 = Vector3.new(-math.sign(p44.x), 0, 0);
-	local v24 = Vector3.new(0, -math.sign(p44.y), 0);
-	local v25 = Vector3.new(0, 0, -math.sign(p44.z));
-	local v26 = nil
-	if v21 == v15 or v21 == v16 then
-		v26 = v23;
-	elseif v21 == v17 or v21 == v18 then
-		v26 = v24;
+--[[
+	AABB.lua
+	Represents an Axis-Aligned Bounding Box (AABB) in 3D space.
+	Provides methods for creation, manipulation, and intersection testing.
+	Includes an object pooling mechanism for potentially reusing common AABB instances.
+]]
+
+local AABB = {}
+AABB.__index = AABB
+
+-- Store pooled AABB instances to reduce garbage collection pressure for common boxes.
+AABB.pooledAABBs = {}
+
+-- Private helper function to generate a unique string key for pooling based on coordinates.
+local function getPoolKey(minX, minY, minZ, maxX, maxY, maxZ)
+	-- Use a consistent format for the key. Precision might matter depending on use case.
+	return ("%.4f,%.4f,%.4f|%.4f,%.4f,%.4f"):format(minX, minY, minZ, maxX, maxY, maxZ)
+end
+
+--[[
+	Constructs a new AABB instance.
+	Ensures that min coordinates are less than or equal to max coordinates.
+
+	@param minX (number): Minimum X coordinate.
+	@param minY (number): Minimum Y coordinate.
+	@param minZ (number): Minimum Z coordinate.
+	@param maxX (number): Maximum X coordinate.
+	@param maxY (number): Maximum Y coordinate.
+	@param maxZ (number): Maximum Z coordinate.
+	@return (AABB): The newly created AABB object.
+]]
+function AABB.new(minX, minY, minZ, maxX, maxY, maxZ)
+	-- Ensure min <= max for each axis
+	if maxX < minX then minX, maxX = maxX, minX end
+	if maxY < minY then minY, maxY = maxY, minY end
+	if maxZ < minZ then minZ, maxZ = maxZ, minZ end
+
+	local self = setmetatable({}, AABB)
+	self.minX = minX
+	self.minY = minY
+	self.minZ = minZ
+	self.maxX = maxX
+	self.maxY = maxY
+	self.maxZ = maxZ
+	self.pooled = false -- Indicates if this instance came from the pool (and shouldn't be mutated)
+	return self
+end
+
+--[[
+	Retrieves an AABB from the pool or creates a new pooled instance if one doesn't exist.
+	Pooled AABBs should generally be treated as immutable.
+
+	@param minX (number): Minimum X coordinate.
+	@param minY (number): Minimum Y coordinate.
+	@param minZ (number): Minimum Z coordinate.
+	@param maxX (number): Maximum X coordinate.
+	@param maxY (number): Maximum Y coordinate.
+	@param maxZ (number): Maximum Z coordinate.
+	@return (AABB): A pooled AABB object.
+]]
+function AABB.fromPool(minX, minY, minZ, maxX, maxY, maxZ)
+	-- Ensure min <= max for consistent pooling keys
+	if maxX < minX then minX, maxX = maxX, minX end
+	if maxY < minY then minY, maxY = maxY, minY end
+	if maxZ < minZ then minZ, maxZ = maxZ, minZ end
+
+	local key = getPoolKey(minX, minY, minZ, maxX, maxY, maxZ)
+	local existing = AABB.pooledAABBs[key]
+
+	if existing then
+		return existing
+	end
+
+	-- Create a new one, mark as pooled, and store it
+	local newPooled = AABB.new(minX, minY, minZ, maxX, maxY, maxZ)
+	newPooled.pooled = true
+	AABB.pooledAABBs[key] = newPooled
+	return newPooled
+end
+
+--[[
+	Checks if the AABB has zero volume (i.e., it's a point, line, or plane).
+	Original logic was flawed; this version checks if *any* dimension has zero size.
+
+	@return (boolean): True if the AABB has zero volume, false otherwise.
+]]
+function AABB:IsEmpty()
+	-- An AABB is considered "empty" or degenerate if any dimension has zero length.
+	return self.minX == self.maxX or self.minY == self.maxY or self.minZ == self.maxZ
+end
+
+--[[
+	Creates a *new* AABB translated by the given vector components.
+
+	@param dx (number): Translation amount along the X-axis.
+	@param dy (number): Translation amount along the Y-axis.
+	@param dz (number): Translation amount along the Z-axis.
+	@return (AABB): A new, translated AABB instance.
+]]
+function AABB:Translate(dx, dy, dz)
+	local newMinX = self.minX + dx
+	local newMinY = self.minY + dy
+	local newMinZ = self.minZ + dz
+	local newMaxX = self.maxX + dx
+	local newMaxY = self.maxY + dy
+	local newMaxZ = self.maxZ + dz
+
+	if self.pooled then
+		return AABB.fromPool(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)
 	else
-		v26 = v25;
-	end;
-	return true, p43 + p44 * v21, v26;
-end;
-function v1.Intersects(p45, p46)
-	if not (p46.maxX <= p45.minX) and not (p45.maxX <= p46.minX) and not (p46.maxY <= p45.minY) and not (p45.maxY <= p46.minY) then
-		local v27 = false;
-		if p45.minZ < p46.maxZ then
-			v27 = p46.minZ < p45.maxZ;
-		end;
-		return v27;
-	end;
-	return false;
-end;
-function v1.Clone(p47)
-	return v1.new(p47.minX, p47.minY, p47.minZ, p47.maxX, p47.maxY, p47.maxZ);
-end;
-function v1.CalculateXOffset(p48, p49, p50)
-	if p49.maxY <= p48.minY or p48.maxY <= p49.minY then
-		return p50;
-	end;
-	if p49.maxZ <= p48.minZ or p48.maxZ <= p49.minZ then
-		return p50;
-	end;
-	if p50 > 0 and p49.maxX <= p48.minX then
-		local v28 = p48.minX - p49.maxX;
-		if v28 < p50 then
-			p50 = v28 - 0.0001;
-		end;
-	end;
-	if p50 < 0 and p48.maxX <= p49.minX then
-		local v29 = p48.maxX - p49.minX;
-		if p50 < v29 then
-			p50 = v29 + 0.0001;
-		end;
-	end;
-	return p50;
-end;
-function v1.CalculateYOffset(p51, p52, p53)
-	if p52.maxX <= p51.minX or p51.maxX <= p52.minX then
-		return p53;
-	end;
-	if p52.maxZ <= p51.minZ or p51.maxZ <= p52.minZ then
-		return p53;
-	end;
-	if p53 > 0 and p52.maxY <= p51.minY then
-		local v30 = p51.minY - p52.maxY;
-		if v30 < p53 then
-			p53 = v30 - 0.0001;
-		end;
-	end;
-	if p53 < 0 and p51.maxY <= p52.minY then
-		local v31 = p51.maxY - p52.minY;
-		if p53 < v31 then
-			p53 = v31 + 0.0001;
-		end;
-	end;
-	return p53;
-end;
-function v1.CalculateZOffset(p54, p55, p56)
-	if p55.maxY <= p54.minY or p54.maxY <= p55.minY then
-		return p56;
-	end;
-	if p55.maxX <= p54.minX or p54.maxX <= p55.minX then
-		return p56;
-	end;
-	if p56 > 0 and p55.maxZ <= p54.minZ then
-		local v32 = p54.minZ - p55.maxZ;
-		if v32 < p56 then
-			p56 = v32 - 0.0001;
-		end;
-	end;
-	if p56 < 0 and p54.maxZ <= p55.minZ then
-		local v33 = p54.maxZ - p55.minZ;
-		if p56 < v33 then
-			p56 = v33 + 0.0001;
-		end;
-	end;
-	return p56;
-end;
-return v1;
+		return AABB.new(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)
+	end
+end
+
+--[[
+	*Modifies* this AABB instance by translating it by the given vector components.
+	Warns and does nothing if the AABB is pooled (pooled instances should be immutable).
+
+	@param dx (number): Translation amount along the X-axis.
+	@param dy (number): Translation amount along the Y-axis.
+	@param dz (number): Translation amount along the Z-axis.
+	@return (AABB): Returns self after modification (or unmodified if pooled).
+]]
+function AABB:Offset(dx, dy, dz)
+	if self.pooled then
+		warn("AABB:Offset: Attempting to modify a pooled AABB. Operation ignored.")
+		return self -- Return self without changes
+	end
+
+	self.minX = self.minX + dx
+	self.maxX = self.maxX + dx
+	self.minY = self.minY + dy
+	self.maxY = self.maxY + dy
+	self.minZ = self.minZ + dz
+	self.maxZ = self.maxZ + dz
+	return self
+end
+
+--[[
+	Creates a *new* AABB expanded outward based on the direction vector.
+	Positive components expand the max bounds, negative components expand the min bounds.
+
+	@param direction (Vector3): The vector indicating the expansion direction and magnitude.
+	@return (AABB): A new, expanded AABB instance.
+]]
+function AABB:DirectionalExpand(direction)
+	local newMinX = self.minX
+	local newMaxX = self.maxX
+	local newMinY = self.minY
+	local newMaxY = self.maxY
+	local newMinZ = self.minZ
+	local newMaxZ = self.maxZ
+
+	if direction.X < 0 then
+		newMinX = newMinX + direction.X -- Adding negative expands min
+	elseif direction.X > 0 then
+		newMaxX = newMaxX + direction.X -- Adding positive expands max
+	end
+
+	if direction.Y < 0 then
+		newMinY = newMinY + direction.Y
+	elseif direction.Y > 0 then
+		newMaxY = newMaxY + direction.Y
+	end
+
+	if direction.Z < 0 then
+		newMinZ = newMinZ + direction.Z
+	elseif direction.Z > 0 then
+		newMaxZ = newMaxZ + direction.Z
+	end
+
+	if self.pooled then
+		return AABB.fromPool(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)
+	else
+		return AABB.new(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)
+	end
+end
+
+--[[
+	Creates a *new* AABB scaled relative to the origin (0,0,0).
+
+	@param scaleX (number): Scaling factor along the X-axis.
+	@param scaleY (number): Scaling factor along the Y-axis.
+	@param scaleZ (number): Scaling factor along the Z-axis.
+	@return (AABB): A new, scaled AABB instance.
+]]
+function AABB:Scale(scaleX, scaleY, scaleZ)
+	local newMinX = self.minX * scaleX
+	local newMinY = self.minY * scaleY
+	local newMinZ = self.minZ * scaleZ
+	local newMaxX = self.maxX * scaleX
+	local newMaxY = self.maxY * scaleY
+	local newMaxZ = self.maxZ * scaleZ
+
+	-- Scaling might invert min/max if scale factors are negative, so re-check
+	if newMaxX < newMinX then newMinX, newMaxX = newMaxX, newMinX end
+	if newMaxY < newMinY then newMinY, newMaxY = newMaxY, newMinY end
+	if newMaxZ < newMinZ then newMinZ, newMaxZ = newMaxZ, newMinZ end
+
+	if self.pooled then
+		return AABB.fromPool(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)
+	else
+		return AABB.new(newMinX, newMinY, newMinZ, newMaxX, newMaxY, newMaxZ)
+	end
+end
+
+--[[
+	Creates a *new* AABB scaled uniformly relative to the origin (0,0,0).
+
+	@param scaleFactor (number): The uniform scaling factor for all axes.
+	@return (AABB): A new, uniformly scaled AABB instance.
+]]
+function AABB:UniformScale(scaleFactor)
+	return self:Scale(scaleFactor, scaleFactor, scaleFactor)
+end
+
+--[[
+	Creates a *new* AABB representing the intersection (overlap) of this AABB and another.
+	If the boxes do not overlap, the resulting AABB will have min > max for at least one axis.
+
+	@param other (AABB): The other AABB to intersect with.
+	@return (AABB): A new AABB representing the intersection.
+]]
+function AABB:Intersection(other)
+	local intersectMinX = math.max(self.minX, other.minX)
+	local intersectMinY = math.max(self.minY, other.minY)
+	local intersectMinZ = math.max(self.minZ, other.minZ)
+	local intersectMaxX = math.min(self.maxX, other.maxX)
+	local intersectMaxY = math.min(self.maxY, other.maxY)
+	local intersectMaxZ = math.min(self.maxZ, other.maxZ)
+
+	-- Note: If no overlap, min > max on some axis. Caller might need to check IsEmpty or validity.
+	if self.pooled then
+		-- Intersection might result in a non-pooled size, so use .new unless exact match found
+		return AABB.fromPool(intersectMinX, intersectMinY, intersectMinZ, intersectMaxX, intersectMaxY, intersectMaxZ)
+	else
+		return AABB.new(intersectMinX, intersectMinY, intersectMinZ, intersectMaxX, intersectMaxY, intersectMaxZ)
+	end
+end
+
+--[[
+	Creates a *new* AABB that encompasses both this AABB and another (their union).
+
+	@param other (AABB): The other AABB to include in the bounds.
+	@return (AABB): A new AABB encompassing both original AABBs.
+]]
+function AABB:Extents(other)
+	local extentMinX = math.min(self.minX, other.minX)
+	local extentMinY = math.min(self.minY, other.minY)
+	local extentMinZ = math.min(self.minZ, other.minZ)
+	local extentMaxX = math.max(self.maxX, other.maxX)
+	local extentMaxY = math.max(self.maxY, other.maxY)
+	local extentMaxZ = math.max(self.maxZ, other.maxZ)
+
+	if self.pooled then
+		return AABB.fromPool(extentMinX, extentMinY, extentMinZ, extentMaxX, extentMaxY, extentMaxZ)
+	else
+		return AABB.new(extentMinX, extentMinY, extentMinZ, extentMaxX, extentMaxY, extentMaxZ)
+	end
+end
+
+--[[
+	Checks if a 3D point lies within or on the boundary of this AABB.
+
+	@param point (Vector3): The point to check.
+	@return (boolean): True if the point is inside or on the boundary, false otherwise.
+]]
+function AABB:IntersectsPoint(point)
+	-- More readable and efficient check than nested ifs
+	return point.X >= self.minX and point.X <= self.maxX and
+	       point.Y >= self.minY and point.Y <= self.maxY and
+	       point.Z >= self.minZ and point.Z <= self.maxZ
+end
+
+--[[
+	Checks if a ray intersects with this AABB using the Slab method.
+
+	@param rayOrigin (Vector3): The starting point of the ray.
+	@param rayDirection (Vector3): The direction vector of the ray (should be normalized for correct distance).
+	@return (boolean): True if the ray intersects, false otherwise.
+	@return (Vector3?): The point of intersection (if intersects), nil otherwise.
+	@return (Vector3?): The surface normal at the point of intersection (if intersects), nil otherwise.
+]]
+function AABB:IntersectsRay(rayOrigin, rayDirection)
+	-- If the origin is inside the box, it's an immediate intersection.
+	if self:IntersectsPoint(rayOrigin) then
+		-- Normal is tricky here, could be considered pointing inward from origin?
+		-- Or maybe return nil normal? For simplicity, return origin and nil normal.
+		return true, rayOrigin, nil
+	end
+
+	-- Avoid division by zero if ray is axis-aligned
+	local invDirX = rayDirection.X == 0 and math.huge or 1 / rayDirection.X
+	local invDirY = rayDirection.Y == 0 and math.huge or 1 / rayDirection.Y
+	local invDirZ = rayDirection.Z == 0 and math.huge or 1 / rayDirection.Z
+
+	-- Calculate intersection distances with the planes forming the AABB
+	local t1 = (self.minX - rayOrigin.X) * invDirX
+	local t2 = (self.maxX - rayOrigin.X) * invDirX
+	local t3 = (self.minY - rayOrigin.Y) * invDirY
+	local t4 = (self.maxY - rayOrigin.Y) * invDirY
+	local t5 = (self.minZ - rayOrigin.Z) * invDirZ
+	local t6 = (self.maxZ - rayOrigin.Z) * invDirZ
+
+	-- Find the maximum of the minimum intersection times (entry point)
+	local tmin = math.max(math.max(math.min(t1, t2), math.min(t3, t4)), math.min(t5, t6))
+	-- Find the minimum of the maximum intersection times (exit point)
+	local tmax = math.min(math.min(math.max(t1, t2), math.max(t3, t4)), math.max(t5, t6))
+
+	-- If tmax < 0, ray is intersecting AABB behind the origin
+	if tmax < 0 then
+		return false, nil, nil
+	end
+
+	-- If tmin > tmax, ray doesn't intersect AABB
+	if tmin > tmax then
+		return false, nil, nil
+	end
+
+	-- Intersection point
+	local intersectionPoint = rayOrigin + rayDirection * tmin
+
+	-- Calculate the normal based on which plane was hit at tmin
+	local normal = Vector3.zero
+	local epsilon = 0.0001 -- Tolerance for floating point comparison
+	if math.abs(tmin - t1) < epsilon then normal = Vector3.new(-1, 0, 0)
+	elseif math.abs(tmin - t2) < epsilon then normal = Vector3.new(1, 0, 0)
+	elseif math.abs(tmin - t3) < epsilon then normal = Vector3.new(0, -1, 0)
+	elseif math.abs(tmin - t4) < epsilon then normal = Vector3.new(0, 1, 0)
+	elseif math.abs(tmin - t5) < epsilon then normal = Vector3.new(0, 0, -1)
+	elseif math.abs(tmin - t6) < epsilon then normal = Vector3.new(0, 0, 1)
+	end
+
+	return true, intersectionPoint, normal
+end
+
+
+--[[
+	Checks if this AABB overlaps with another AABB.
+
+	@param other (AABB): The other AABB to check for intersection.
+	@return (boolean): True if the AABBs intersect, false otherwise.
+]]
+function AABB:Intersects(other)
+	-- Check for non-overlap on each axis. If no separating axis is found, they intersect.
+	local noOverlapX = self.maxX <= other.minX or self.minX >= other.maxX
+	local noOverlapY = self.maxY <= other.minY or self.minY >= other.maxY
+	local noOverlapZ = self.maxZ <= other.minZ or self.minZ >= other.maxZ
+
+	return not (noOverlapX or noOverlapY or noOverlapZ)
+end
+
+--[[
+	Creates a *new*, non-pooled copy of this AABB.
+
+	@return (AABB): A new AABB instance with the same dimensions.
+]]
+function AABB:Clone()
+	return AABB.new(self.minX, self.minY, self.minZ, self.maxX, self.maxY, self.maxZ)
+end
+
+--[[
+	Calculates the maximum distance this AABB ('self') can move along the X-axis
+	in the direction specified by 'deltaX' before colliding with the 'other' AABB.
+
+	@param other (AABB): The AABB to check collision against.
+	@param deltaX (number): The intended movement distance along X.
+	@return (number): The adjusted deltaX, clamped to prevent collision.
+]]
+function AABB:CalculateXOffset(other, deltaX)
+	-- If no overlap on Y or Z planes, they can't collide along X
+	if self.maxY <= other.minY or self.minY >= other.maxY or self.maxZ <= other.minZ or self.minZ >= other.maxZ then
+		return deltaX
+	end
+
+	-- Moving right (positive deltaX)
+	if deltaX > 0 and self.maxX <= other.minX then
+		local gap = other.minX - self.maxX
+		if gap < deltaX then
+			-- Clamp movement just before collision (small epsilon to avoid floating point issues)
+			deltaX = math.max(0, gap - 0.0001)
+		end
+	-- Moving left (negative deltaX)
+	elseif deltaX < 0 and self.minX >= other.maxX then
+		local gap = other.maxX - self.minX -- Gap will be negative
+		if gap > deltaX then -- Compare negative numbers
+			-- Clamp movement just before collision
+			deltaX = math.min(0, gap + 0.0001)
+		end
+	end
+
+	return deltaX
+end
+
+--[[
+	Calculates the maximum distance this AABB ('self') can move along the Y-axis
+	in the direction specified by 'deltaY' before colliding with the 'other' AABB.
+
+	@param other (AABB): The AABB to check collision against.
+	@param deltaY (number): The intended movement distance along Y.
+	@return (number): The adjusted deltaY, clamped to prevent collision.
+]]
+function AABB:CalculateYOffset(other, deltaY)
+	-- If no overlap on X or Z planes, they can't collide along Y
+	if self.maxX <= other.minX or self.minX >= other.maxX or self.maxZ <= other.minZ or self.minZ >= other.maxZ then
+		return deltaY
+	end
+
+	-- Moving up (positive deltaY)
+	if deltaY > 0 and self.maxY <= other.minY then
+		local gap = other.minY - self.maxY
+		if gap < deltaY then
+			deltaY = math.max(0, gap - 0.0001)
+		end
+	-- Moving down (negative deltaY)
+	elseif deltaY < 0 and self.minY >= other.maxY then
+		local gap = other.maxY - self.minY -- Negative
+		if gap > deltaY then
+			deltaY = math.min(0, gap + 0.0001)
+		end
+	end
+
+	return deltaY
+end
+
+--[[
+	Calculates the maximum distance this AABB ('self') can move along the Z-axis
+	in the direction specified by 'deltaZ' before colliding with the 'other' AABB.
+
+	@param other (AABB): The AABB to check collision against.
+	@param deltaZ (number): The intended movement distance along Z.
+	@return (number): The adjusted deltaZ, clamped to prevent collision.
+]]
+function AABB:CalculateZOffset(other, deltaZ)
+	-- If no overlap on X or Y planes, they can't collide along Z
+	if self.maxX <= other.minX or self.minX >= other.maxX or self.maxY <= other.minY or self.minY >= other.maxY then
+		return deltaZ
+	end
+
+	-- Moving forward (positive deltaZ)
+	if deltaZ > 0 and self.maxZ <= other.minZ then
+		local gap = other.minZ - self.maxZ
+		if gap < deltaZ then
+			deltaZ = math.max(0, gap - 0.0001)
+		end
+	-- Moving backward (negative deltaZ)
+	elseif deltaZ < 0 and self.minZ >= other.maxZ then
+		local gap = other.maxZ - self.minZ -- Negative
+		if gap > deltaZ then
+			deltaZ = math.min(0, gap + 0.0001)
+		end
+	end
+
+	return deltaZ
+end
+return AABB
